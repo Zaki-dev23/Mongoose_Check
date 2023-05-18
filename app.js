@@ -1,159 +1,409 @@
-/*First, let's install and set up Mongoose:
-
-npm install mongoose mongodb --save 
-npm install dotenv
-npm install express*/
 
 const mongoose = require('mongoose');
-require('dotenv').config(); 
 
-// Connectez-vous à MongoDB en utilisant Mongoose
-mongoose.connect('mongodb+srv://abbcccdddd663:a123456@cluster0.xocjebr.mongodb.net/persona', { useNewUrlParser: true, useUnifiedTopology: true })
-.then(() => console.log('Connected to MongoDB'))
-.catch(err => console.error('Failed to connect to MongoDB', err));
+require('dotenv').config();
 
-// Create a person with this prototype
-const personSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  age: { type: Number, default: 0 },
-  favoriteFoods: [{ type: String }]
+//connect to mongoDb Atlas databse using URI from env 
+
+const mongoURI = process.env.MONGO_URI
+
+mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
+
+.then(() => console.log('mongoDB connected...'))
+
+.catch(() => console.log('err'));
+
+//create a person Shema
+
+const Schema = mongoose.Schema;
+
+const personSchema = new Schema({
+
+  name: {type: String, required:true},
+
+  age: Number,
+
+  favoriteFoods: [String],
+
 });
+
+//create a person model
 
 const Person = mongoose.model('Person', personSchema);
 
+//create a person record 
+
 const person = new Person({
-  name: 'amin',
-  age: 30,
-  favoriteFoods: ['tajin', 'pidza']
-});
 
-person.save()
-  .then(data => {
-    console.log('Person saved:', data);
-  })
-  .catch(err => {
-    console.error(err);
+    name: 'Fatima Zahra',
+
+    age: 25,
+
+    favoriteFoods: ['pizza', 'tacos']
+
   });
 
-//Create Many Records with model.create()
+//save a pperson record to database
 
-const arrayOfPeople = [
-  { name: 'ali', age: 23, favoriteFoods: ['ton', 'pol'] },
-  { name: 'kamal', age: 25, favoriteFoods: ['tacos', 'pidza'] },
-  { name: 'khalid', age: 60, favoriteFoods: ['Couscous ', 'tagine'] }
-];
+  person.save()
 
-Person.create(arrayOfPeople)
-  .then(data => {
-    console.log('People created:', data);
+  .then(()=> console.log('person created successefully....'))
+
+  .catch(err=> console.log(err));
+
+//create an array of people
+
+const users = [
+
+    {name: 'mohamed', age: 45, favoriteFoods: ['Tajine', 'Rfissa']}, 
+
+    {name: 'Hajar', age: 18, favoriteFoods: ['sushi', 'pizza']},
+
+    {name: 'yassmine', age: 30, favoriteFoods: ['sushi', 'pizza']}
+
+     ]
+
+Person.create(users)
+
+  .then(() => {
+
+    console.log('people are saved');
+
   })
-  .catch(err => {
-    console.error(err);
+
+  .catch(error => {
+
+    console.log(error);
+
   });
 
-//Use model.find() to Search , Search by name
+// find all people with the given name
 
-Person.find({ name: 'ali' })
-  .then(data => {
-    console.log('People found by name:', data);
+  Person.find({
+
+    name: 'Hajar'  
+
   })
+
+  .then(res => {
+
+    console.log('all are founded',res)
+
+  })
+
   .catch(err => {
-    console.error(err);
+
+    console.error(err)
+
+  })
+
+// find a specific person with the given favoriteFood 
+
+  Person.findOne({
+
+    favoriteFoods: 'pizza'  
+
+  })
+
+  .then(res => {
+
+    console.log('the data is founded',res)
+
+  })
+
+  .catch(err => {
+
+    console.error(err)
+
+  })
+
+// find by Id
+
+const persoId ="643e79535d6b0b33ca4c2851"
+
+  Person.findById(persoId)
+
+  .then(res => {
+
+      console.log('person is founded',res);
+
+      })
+
+       .catch(error => {
+
+        console.log(error);
+
   });
 
-//Use Model.findOne() to search , Search  by food
-const food = 'tajin';
-Person.findOne({ favoriteFoods: food })
-  .then(data => {
-    console.log(`Person found by favorite food "${food}":`, data);
-  })
-  .catch(err => {
-    console.error(err);
-  });
+// update the person with a specific Id
 
-//Use model.findById() to Search , Search by id
+const personId ="643e79535d6b0b33ca4c2853"
 
-const personId = '6436d4da41fa8d70c2bbcd20'; 
 Person.findById(personId)
-  .then(data => {
-    console.log(`Person found by _id "${personId}":`, data);
-  })
-  .catch(err => {
-    console.error(err);
+
+.then(res => {res.favoriteFoods.push('Humburger');
+
+res.save()
+
+.then(resultat=> console.log('person updated successefully....', resultat))
+
+ .catch(err=> console.log(err));
+
+})
+
+.catch(err=> console.log(err))
+
+// update a person by name
+
+const personName ="Fatima Zahra"
+
+Person.findOneAndUpdate({name: personName}, {age: 20})
+
+.then(res => console.log('user is updated',res))
+
+.catch(err => console.log(err))
+
+// delete a person by ID
+
+Person.findByIdAndRemove(personId)
+
+.then(res => console.log('user is removed',res))
+
+.catch(err => console.log(err))
+
+// delete all people with given name
+
+Person.deleteMany({ name: 'Hajar' })
+
+.then(() => console.log('all the users with the given name are removed'))
+
+.catch(err => console.log(err))
+
+// find all the people with the given favoriteFoods using Query Building chain
+
+Person.find({favoriteFoods:"pizza"})   // find all user               
+
+         .limit(2)                // limit to 2 documents
+
+         .sort({name: 1})     // sort by name
+
+         .select({age: false}) // skip age
+
+         .exec()                   // execute the query
+
+         .then(docs => {
+
+            console.log(docs)
+
+          })
+
+         .catch(err => {
+
+            console.error(err)
+
+          })
+
+const mongoose = require('mongoose');
+
+require('dotenv').config();
+
+//connect to mongoDb Atlas databse using URI from env 
+
+const mongoURI = process.env.MONGO_URI
+
+mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
+
+.then(() => console.log('mongoDB connected...'))
+
+.catch(() => console.log('err'));
+
+//create a person Shema
+
+const Schema = mongoose.Schema;
+
+const personSchema = new Schema({
+
+  name: {type: String, required:true},
+
+  age: Number,
+
+  favoriteFoods: [String],
+
+});
+
+//create a person model
+
+const Person = mongoose.model('Person', personSchema);
+
+//create a person record 
+
+const person = new Person({
+
+    name: 'Zakaria ait laasri',
+
+    age: 22,
+
+    favoriteFoods: ['coscous', 'tacos']
+
   });
 
-//Updates by Running Find, Edit, then Save
-Person.findByIdAndUpdate(personId, { $push: { favoriteFoods: 'hamburger' } }, { new: true })
-  .then(data => {
-    console.log('Person updated:', data);
+//save a pperson record to database
+
+  person.save()
+
+  .then(()=> console.log('person created successefully....'))
+
+  .catch(err=> console.log(err));
+
+//create an array of people
+
+const users = [
+
+    {name: 'mohamed', age: 45, favoriteFoods: ['Tajine', 'Rfissa']}, 
+
+    {name: 'Hajar', age: 18, favoriteFoods: ['sushi', 'pizza']},
+
+    {name: 'yassmine', age: 30, favoriteFoods: ['sushi', 'pizza']}
+
+     ]
+
+Person.create(users)
+
+  .then(() => {
+
+    console.log('people are saved');
+
   })
-  .catch(err => {
-    console.error(err);
+
+  .catch(error => {
+
+    console.log(error);
+
   });
 
-//Updates on a Document Using model.findOneAndUpdate()
-const personName = 'ali';
-Person.findOneAndUpdate({ name: personName }, { age: 20 }, { new: true })
-  .then(data => {console.log(`Person "${personName}" updated:`, data);
-})
-.catch(err => {
-console.error(err);
-});
+// find all people with the given name
 
-//Delete One Document Using model.findByIdAndRemove
-const personIdToDelete = '6436d4da41fa8d70c2bbcd1f'; // Replace with valid _id
-Person.findByIdAndRemove(personIdToDelete)
-.then(data => {
-console.log(`Person with id ${personIdToDelete} deleted:`, data);
-})
-.catch(err => {
-console.error(err);
-});
+  Person.find({
 
-// Delete all documents that match a condition using Model.remove()
+    name: 'Hajar'  
 
-Person.deleteOne({ name: 'ali' })
-  .then(result => {
-    console.log(result);
   })
+
+  .then(res => {
+
+    console.log('all are founded',res)
+
+  })
+
   .catch(err => {
-    console.error(err);
+
+    console.error(err)
+
+  })
+
+// find a specific person with the given favoriteFood 
+
+  Person.findOne({
+
+    favoriteFoods: 'pizza'  
+
+  })
+
+  .then(res => {
+
+    console.log('the data is founded',res)
+
+  })
+
+  .catch(err => {
+
+    console.error(err)
+
+  })
+
+// find by Id
+
+const persoId ="643e79535d6b0b33ca4c2851"
+
+  Person.findById(persoId)
+
+  .then(res => {
+
+      console.log('person is founded',res);
+
+      })
+
+       .catch(error => {
+
+        console.log(error);
+
   });
 
-// Chain multiple operations together using Model.findOne() and chaining methods
-Person.findOne({ name: 'kamal' })
-.select('-_id name age favoriteFoods')
-.exec()
-.then(data => {
-console.log('Person found and selected fields:', data);
-})
-.catch(err => {
-console.error(err);
-});
+// update the person with a specific Id
 
-// Use Model.find() to search for people with a given food in their favoriteFoods
-const foodToSearch = 'tajin';
-Person.find({ favoriteFoods: foodToSearch })
-.sort('name')
-.limit(2)
-.select('name favoriteFoods')
-.exec()
-.then(data => {
-console.log(`People found by favorite food ${foodToSearch}`, data);
-})
-.catch(err => {
-console.error(err);
-});
+const personId ="643e79535d6b0b33ca4c2853"
 
-// Chain multiple query helpers together using Model.find()
-Person.find()
-.where('age').gte(25)
-.where('favoriteFoods').in(['tajin', 'ton'])
-.select('-_id name age favoriteFoods')
-.exec()
-.then(data => {
-console.log('People found by age and favorite foods:', data);
+Person.findById(personId)
+
+.then(res => {res.favoriteFoods.push('Humburger');
+
+res.save()
+
+.then(resultat=> console.log('person updated successefully....', resultat))
+
+ .catch(err=> console.log(err));
+
 })
-.catch(err => {
-console.error(err);
-});
+
+.catch(err=> console.log(err))
+
+// update a person by name
+
+const personName ="Fatima Zahra"
+
+Person.findOneAndUpdate({name: personName}, {age: 20})
+
+.then(res => console.log('user is updated',res))
+
+.catch(err => console.log(err))
+
+// delete a person by ID
+
+Person.findByIdAndRemove(personId)
+
+.then(res => console.log('user is removed',res))
+
+.catch(err => console.log(err))
+
+// delete all people with given name
+
+Person.deleteMany({ name: 'Hajar' })
+
+.then(() => console.log('all the users with the given name are removed'))
+
+.catch(err => console.log(err))
+
+// find all the people with the given favoriteFoods using Query Building chain
+
+Person.find({favoriteFoods:"pizza"})   // find all user               
+
+         .limit(2)                // limit to 2 documents
+
+         .sort({name: 1})     // sort by name
+
+         .select({age: false}) // skip age
+
+         .exec()                   // execute the query
+
+         .then(docs => {
+
+            console.log(docs)
+
+          })
+
+         .catch(err => {
+
+            console.error(err)
+
+          })
+
