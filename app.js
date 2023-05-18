@@ -35,11 +35,11 @@ const Person = mongoose.model('Person', personSchema);
 
 const person = new Person({
 
-    name: 'Fatima Zahra',
+    name: 'Zakaria ait laasri',
 
-    age: 25,
+    age: 22,
 
-    favoriteFoods: ['pizza', 'tacos']
+    favoriteFoods: ['couscous', 'tacos']
 
   });
 
